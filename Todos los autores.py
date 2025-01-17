@@ -167,7 +167,7 @@ def create_prompt_template_all():
 
 # Amazon Bedrock - KnowledgeBase Retriever 
 retriever = AmazonKnowledgeBasesRetriever(
-    knowledge_base_id="KZ0SO65RI1", #  Knowledge base ID
+    knowledge_base_id="WGUUTHDVPH", #  Knowledge base ID
     retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 20}},
 )
 
