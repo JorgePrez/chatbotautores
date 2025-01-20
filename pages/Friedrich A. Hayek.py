@@ -20,6 +20,8 @@ from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
 import streamlit as st1
+from markdown import markdown
+import html
 
 
 # ------------------------------------------------------
@@ -484,6 +486,30 @@ st1.set_page_config(page_title='Chatbot CHH')
 
 st1.subheader('Friedrich A. Hayek 🔗', divider='rainbow')
 
+# Función para formatear el historial
+
+def display_history1(history):
+    for message in history:
+        content = message.content
+        #safe_content = html.escape(message.content)  # Escapar HTML
+        #html_content = markdown(message.content)  
+        if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
+            st1.markdown(
+                f"""
+                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-radius: 8px; color: #F3F4F6; font-size: 0.9em;">
+                    <strong>Usuario:</strong><br>
+                    {content}
+                </div>
+                """, unsafe_allow_html=True)
+        elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
+            st1.markdown(
+                f"""
+                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-left: 5px solid #FF9F1C; border-radius: 8px; color: #E5E7EB; font-size: 0.9em;">
+                    <strong>Chatbot (Friedrich A. Hayek) :</strong><br>
+                    {content}
+                </div>
+                """, unsafe_allow_html=True)
+
 
 
 # Clear Chat History function
@@ -493,11 +519,16 @@ def clear_chat_history():
 
 with st1.sidebar:
     st1.title('Friedrich A. Hayek 🔗')
-    streaming_on = st1.toggle('Streaming (Mostrar generación de texto en tiempo real)', value=True)
-    st1.button('Limpiar chat', on_click=clear_chat_history)
+   # streaming_on = st1.toggle('Streaming (Mostrar generación de texto en tiempo real)', value=True)
+    streaming_on = True
+   # st1.button('Limpiar chat', on_click=clear_chat_history)
+
+
+    with st1.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
+        display_history1(history1.messages) 
+
     st1.divider()
-    st1.write("History Logs")
-    st1.write(history1.messages)
+
 
 # Initialize session state for messages if not already present
 if "messages1" not in st1.session_state:
@@ -550,30 +581,3 @@ if prompt := st1.chat_input():
 
             # session_state append
             st1.session_state.messages1.append({"role": "assistant", "content": full_response1})
-    else:
-        # Chain - Invoke
-        with st1.chat_message("assistant"):
-            response = chain_with_history1.invoke(
-                {"question" : prompt, "history1" : history1},
-                config1
-            )
-            st1.write(response['response'])
-            # Citations with S3 pre-signed URL
-            citations = extract_citations(response['context'])
-            with st1.expander("Mostrar fuentes >"):
-                for citation in citations:
-                    st1.write("**Contenido:** ", citation.page_content)
-                    s3_uri = citation.metadata['location']['s3Location']['uri']
-                    bucket, key = parse_s3_uri(s3_uri)
-                      #  presigned_url = create_presigned_url(bucket, key)
-                     #   if presigned_url:
-                     #       st.markdown(f"**Fuente:** [{s3_uri}]({presigned_url})")
-                     #   else:
-                      #  st.write(f"**Fuente**: {s3_uri} (Presigned URL generation failed)")
-                    st1.write(f"**Fuente**: *{key}* ")
-                
-                    st1.write("**Score**:", citation.metadata['score'])
-                    st1.write("--------------")
-
-            # session_state append
-            st1.session_state.messages1.append({"role": "assistant", "content": response['response']})

@@ -19,9 +19,6 @@ from langchain_aws import ChatBedrock
 from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
-from markdown import markdown
-import html
-
 # ------------------------------------------------------
 # Log level
 
@@ -253,38 +250,6 @@ st.set_page_config(page_title='Chatbot CHH')
 st.subheader('Todos los autores 🔗', divider='rainbow')
 
 
-# Función para formatear el historial
-
-def display_history1(history):
-    for message in history:
-        content = message.content
-        #safe_content = html.escape(message.content)  # Escapar HTML
-        #html_content = markdown(message.content)  
-        if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
-            st.markdown(
-                f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-radius: 8px; color: #F3F4F6; font-size: 0.9em;">
-                    <strong>Usuario:</strong><br>
-                    {content}
-                </div>
-                """, unsafe_allow_html=True)
-        elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
-            st.markdown(
-                f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-left: 5px solid #FF9F1C; border-radius: 8px; color: #E5E7EB; font-size: 0.9em;">
-                    <strong>Chatbot (Todos los autores):</strong><br>
-                    {content}
-                </div>
-                """, unsafe_allow_html=True)
-            
-
-## Ejemplo de lo que esta en history.messages
-history_placeholders = [
-    type('HumanMessage', (object,), {"content": "¿Cuáles son las similitudes clave entre Hayek y Mises?"})(),
-    type('AIMessage', (object,), {"content": "Ambos fueron defensores del libre mercado y críticos del intervencionismo estatal..."})()
-]
-            
-
 # Clear Chat History function
 def clear_chat_history():
     history.clear()
@@ -292,15 +257,13 @@ def clear_chat_history():
 
 with st.sidebar:
     st.title('Todos los autores 🔗')
-
-    streaming_on = True
-
-    with st.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
-        display_history1(history.messages) 
-
+    streaming_on = st.toggle('Streaming (Mostrar generación de texto en tiempo real)', value=True)
+    st.button('Limpiar chat', on_click=clear_chat_history)
     st.divider()
-
-   
+    #st.write("History Logs")
+    #// Historial de Conversaciones
+    st.write("Historial de conversaciones")
+    st.write(history.messages)
 
 # Initialize session state for messages if not already present
 if "messages" not in st.session_state:
@@ -352,6 +315,32 @@ if prompt := st.chat_input():
 
             # session_state append
             st.session_state.messages.append({"role": "assistant", "content": full_response})
+    else:
+        # Chain - Invoke
+        with st.chat_message("assistant"):
+            response = chain_with_history.invoke(
+                {"question" : prompt, "history" : history},
+                config
+            )
+            st.write(response['response'])
+            # Citations with S3 pre-signed URL
+            citations = extract_citations(response['context'])
+            with st.expander("Mostrar fuentes >"):
+                for citation in citations:
+                    st.write("**Contenido:** ", citation.page_content)
+                    s3_uri = citation.metadata['location']['s3Location']['uri']
+                    bucket, key = parse_s3_uri(s3_uri)
 
-  
+                      #  presigned_url = create_presigned_url(bucket, key)
+                     #   if presigned_url:
+                     #       st.markdown(f"**Fuente:** [{s3_uri}]({presigned_url})")
+                     #   else:
+                      #  st.write(f"**Fuente**: {s3_uri} (Presigned URL generation failed)")
+                    st.write(f"**Fuente**: *{key}* ")
+              
+                    st.write("**Score**:", citation.metadata['score'])
+                    st.write("--------------")
+
+            # session_state append
+            st.session_state.messages.append({"role": "assistant", "content": response['response']})
 
