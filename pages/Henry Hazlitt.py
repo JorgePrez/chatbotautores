@@ -20,8 +20,8 @@ from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 import streamlit as st2
 
-from markdown import markdown
-import html
+#from markdown import markdown
+#import html
 
 
 # ------------------------------------------------------
