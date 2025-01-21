@@ -283,7 +283,7 @@ history_placeholders = [
     type('HumanMessage', (object,), {"content": "¿Cuáles son las similitudes clave entre Hayek y Mises?"})(),
     type('AIMessage', (object,), {"content": "Ambos fueron defensores del libre mercado y críticos del intervencionismo estatal..."})()
 ]
-            
+
 
 # Clear Chat History function
 def clear_chat_history():
@@ -307,9 +307,27 @@ if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
 
 # Display chat messages
+
+#for message in st.session_state.messages:
+#    with st.chat_message(message["role"]):
+#        st.write(message["content"])
+
+
+# Mostrar historial de chat con referencias
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
+        
+        # Mostrar referencias si existen
+        if "citations" in message and message["citations"]:
+            with st.expander("Mostrar referencias >"):
+                for citation in message["citations"]:
+                    st.write(f"**Contenido:** {citation.page_content}")
+                    s3_uri = citation.metadata['location']['s3Location']['uri']
+                    bucket, key = parse_s3_uri(s3_uri)
+                    st.write(f"**Fuente:** *{key}*")
+                    st.write("**Score**:", citation.metadata['score'])
+                    st.write("--------------")
 
 # Chat Input - User Prompt 
 if prompt := st.chat_input():
@@ -336,7 +354,7 @@ if prompt := st.chat_input():
             placeholder.markdown(full_response)
             # Citations with S3 pre-signed URL
             citations = extract_citations(full_context)
-            with st.expander("Mostrar fuentes >"):
+            with st.expander("Mostrar referencias >"):
                 for citation in citations:
                     st.write("**Contenido:** ", citation.page_content)
                     s3_uri = citation.metadata['location']['s3Location']['uri']
@@ -348,10 +366,21 @@ if prompt := st.chat_input():
                      #   else:
                       #  st.write(f"**Fuente**: {s3_uri} (Presigned URL generation failed)")
                     st.write(f"**Fuente**: *{key}* ")
+                    st.write("**Score**:", citation.metadata['score'])
                     st.write("--------------")
 
             # session_state append
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            #st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
+            #session_state con referencias
+            st.session_state.messages.append({
+            "role": "assistant",
+            "content": full_response,
+            "citations": citations  # Guardar referencias junto con la respuesta.
+        })
+            
+        #print(st.session_state)
 
   
 

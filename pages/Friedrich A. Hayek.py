@@ -535,9 +535,26 @@ if "messages1" not in st1.session_state:
     st1.session_state.messages1 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
 
 # Display chat messages
+#for message in st1.session_state.messages1:
+#    with st1.chat_message(message["role"]):
+#        st1.write(message["content"])
+
+
+# Mostrar historial de chat con referencias
 for message in st1.session_state.messages1:
     with st1.chat_message(message["role"]):
         st1.write(message["content"])
+        
+        # Mostrar referencias si existen
+        if "citations" in message and message["citations"]:
+            with st1.expander("Mostrar referencias >"):
+                for citation in message["citations"]:
+                    st1.write(f"**Contenido:** {citation.page_content}")
+                    s3_uri = citation.metadata['location']['s3Location']['uri']
+                    bucket, key = parse_s3_uri(s3_uri)
+                    st1.write(f"**Fuente:** *{key}*")
+                    st1.write("**Score**:", citation.metadata['score'])
+                    st1.write("--------------")
 
 # Chat Input - User Prompt 
 if prompt := st1.chat_input():
@@ -564,7 +581,7 @@ if prompt := st1.chat_input():
             placeholder1.markdown(full_response1)
             # Citations with S3 pre-signed URL
             citations1 = extract_citations(full_context1)
-            with st1.expander("Mostrar fuentes >"):
+            with st1.expander("Mostrar referencias >"):
                 for citation in citations1:
                     st1.write("**Contenido:** ", citation.page_content)
                     s3_uri = citation.metadata['location']['s3Location']['uri']
@@ -580,4 +597,12 @@ if prompt := st1.chat_input():
                     st1.write("--------------")
 
             # session_state append
-            st1.session_state.messages1.append({"role": "assistant", "content": full_response1})
+            #st1.session_state.messages1.append({"role": "assistant", "content": full_response1})
+
+
+             #session_state con referencias
+            st1.session_state.messages1.append({
+            "role": "assistant",
+            "content": full_response1,
+            "citations": citations1  # Guardar referencias junto con la respuesta.
+            })

@@ -278,6 +278,7 @@ def clear_chat_history():
     st3.session_state.messages3 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
 
 with st3.sidebar:
+    st3.title('Ludwig von Mises 🔗')
     streaming_on = True
     # st1.button('Limpiar chat', on_click=clear_chat_history)
     with st3.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
@@ -290,9 +291,26 @@ if "messages3" not in st3.session_state:
     st3.session_state.messages3 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
 
 # Display chat messages
+#for message in st3.session_state.messages3:
+#    with st3.chat_message(message["role"]):
+#        st3.write(message["content"])
+
+
+# Mostrar historial de chat con referencias
 for message in st3.session_state.messages3:
     with st3.chat_message(message["role"]):
         st3.write(message["content"])
+        
+        # Mostrar referencias si existen
+        if "citations" in message and message["citations"]:
+            with st3.expander("Mostrar referencias >"):
+                for citation in message["citations"]:
+                    st3.write(f"**Contenido:** {citation.page_content}")
+                    s3_uri = citation.metadata['location']['s3Location']['uri']
+                    bucket, key = parse_s3_uri(s3_uri)
+                    st3.write(f"**Fuente:** *{key}*")
+                    st3.write("**Score**:", citation.metadata['score'])
+                    st3.write("--------------")
 
 # Chat Input - User Prompt 
 if prompt := st3.chat_input():
@@ -319,7 +337,7 @@ if prompt := st3.chat_input():
             placeholder3.markdown(full_response3)
             # Citations with S3 pre-signed URL
             citations3 = extract_citations(full_context3)
-            with st3.expander("Mostrar fuentes >"):
+            with st3.expander("Mostrar referencias >"):
                 for citation in citations3:
                     st3.write("**Contenido:** ", citation.page_content)
                     s3_uri = citation.metadata['location']['s3Location']['uri']
@@ -336,5 +354,12 @@ if prompt := st3.chat_input():
                     st3.write("--------------")
 
             # session_state append
-            st3.session_state.messages3.append({"role": "assistant", "content": full_response3})
+            #st3.session_state.messages3.append({"role": "assistant", "content": full_response3})
+
+               #session_state con referencias
+            st3.session_state.messages3.append({
+            "role": "assistant",
+            "content": full_response3,
+            "citations": citations3  # Guardar referencias junto con la respuesta.
+        })
  
