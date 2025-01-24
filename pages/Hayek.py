@@ -1,5 +1,3 @@
-
-
 # ------------------------------------------------------
 # Streamlit
 # Knowledge Bases for Amazon Bedrock and LangChain 🦜️🔗
@@ -19,9 +17,74 @@ from langchain_aws import ChatBedrock
 from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
+import streamlit as st
 import streamlit as st1
-#from markdown import markdown
-#import html
+from langchain_community.chat_message_histories import DynamoDBChatMessageHistory
+import uuid
+
+from langchain.schema import HumanMessage, AIMessage
+import streamlit_authenticator as stauth
+
+from streamlit_cookies_controller import CookieController
+
+
+#from streamlit_cookies_manager import EncryptedCookieManager
+
+# Configuración de cookies sin contraseña
+#cookies = EncryptedCookieManager(prefix="my_app")  # Sin password
+
+#controller = CookieController()
+
+def callbackclear(params=None):
+    controller = CookieController(key="cookieHayek")
+
+      #cookies = controller.getAll()  # Obtener todas las cookies
+      #if 'id_usuario' in cookies:
+        #controller.remove('id_usuario')  # Eliminar la cookie si existe
+        #controller.remove('id_usuario')
+        # cookies = controller.getAll()
+        # st1.write(cookies)
+    #controller.remove('id_usuario')
+    
+    #st1.markdown(
+    #"<h1 style='text-align: center; color: green;'>Sesión cerrada correctamente</h1>",
+    #unsafe_allow_html=True
+    #)
+
+    st1.success("Sesión cerrada correctamente")
+    st1.markdown(
+    """
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    """,
+    unsafe_allow_html=True
+    )
+
+    controller.remove('id_usuario')
+
+
+    #try:
+            # Intentar eliminar la cookie 'id_usuario'
+    #    controller.remove('id_usuario')
+    #    st1.success("Cerrando sesión")
+    #except KeyError:
+         #Capturar el error si la cookie no existe
+        #st1.warning("Cerrando sesión")
+     #   controller.remove('id_usuario')
+    #except Exception as e:
+        #st1.error(f"Cerrando sesión {str(e)}")
+    #    controller.remove('id_usuario')
+        # Capturar cualquier otro error inesperado
+
+
+def authenticated_menu():
+    # Mostrar un menú de navegación para usuarios autenticados
+    st1.sidebar.page_link("app_autores2.py", label="Todos los autores")
+    st1.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
+    st1.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")
+    st1.sidebar.page_link("pages/Mises.py", label="Ludwig von Mises")
+    #st1.divider()
 
 
 # ------------------------------------------------------
@@ -426,22 +489,76 @@ chain1 = (
     .pick(["response", "context"])
 )
 
+
+
+############################################################
+
+dynamodb = boto3.resource("dynamodb", region_name="us-east-1")  # region
+table_name = "CHHSessionTable"  # Nombre de tu tabla DynamoDB
+
+# Clase para manejar el historial con formato específico
+class CustomDynamoDBChatMessageHistory1:
+    def __init__(self, table_name, session_id):
+        self.table = dynamodb.Table(table_name)
+        self.session_id = session_id
+
+    def get_history(self):
+        """Obtiene el historial completo desde DynamoDB."""
+        response = self.table.get_item(Key={"SessionId": self.session_id})
+        return response.get("Item", {"SessionId": self.session_id, "History": []})
+
+    def update_history(self, new_message):
+        """Actualiza el historial con un nuevo mensaje."""
+        current_history = self.get_history()
+        current_history["History"].append(new_message)
+
+        # Guarda el historial actualizado en DynamoDB
+        self.table.put_item(Item=current_history)
+
+
+# Función para crear el formato de mensaje
+def format_message(content, message_type="human", citations=None):
+    """Crea un mensaje formateado con la estructura deseada."""
+    data = {
+        "additional_kwargs": {},
+        "content": content,
+        "example": False,
+        "id": str(uuid.uuid4()),  # Genera un ID único para cada mensaje
+        "name": None,
+        "response_metadata": {},
+        "type": message_type,
+    }
+
+    # Campos específicos para mensajes del asistente (AI)
+    if message_type == "ai":
+        data.update({
+            "invalid_tool_calls": [],
+            "tool_calls": [],
+            "usage_metadata": None,
+        })
+
+    # Añadir citas si existen
+    if citations:
+        data["citations"] = citations
+
+    return {"data": data, "type": message_type}
+
+
+
+############################################################
+
+
 # Streamlit Chat Message History
-history1 = StreamlitChatMessageHistory(key="chat_messages1")
+#history1 = StreamlitChatMessageHistory(key="chat_messages1")
 
 # Chain with History
-chain_with_history1 = RunnableWithMessageHistory(
-    chain1,
-    lambda session_id: history1,
-    input_messages_key="question",
-    history_messages_key="history1",
-    output_messages_key="response",
-)
-
-
-
-
-
+#chain_with_history1 = RunnableWithMessageHistory(
+#    chain1,
+#    lambda session_id: history1,
+#    input_messages_key="question",
+#    history_messages_key="history1",
+#    output_messages_key="response",
+#)
 
 # ------------------------------------------------------
 # Pydantic data model and helper function for Citations
@@ -485,6 +602,46 @@ def parse_s3_uri(uri: str) -> tuple:
 st1.set_page_config(page_title='Chatbot CHH')
 
 st1.subheader('Friedrich A. Hayek 🔗', divider='rainbow')
+streaming_on = True
+
+#####################################################################################################################
+
+import yaml
+from yaml.loader import SafeLoader
+with open('userschh.yaml') as file:
+        config = yaml.load(file, Loader=SafeLoader)
+
+authenticator = stauth.Authenticate(
+        config['credentials'],
+        config['cookie']['name'],
+        config['cookie']['key'],
+        config['cookie']['expiry_days']
+    )
+
+
+if st1.session_state["authentication_status"]:
+        #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
+       #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
+        authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar', callback= callbackclear )  # Llamada a la función para limpiar sesión)
+
+
+        st1.divider()
+        authenticated_menu()
+
+   # Mostrar unicamente en la pantalla de autenticacion
+if not st1.session_state["authentication_status"]:
+    #st1.stop()  # Detener ejecución del resto del código
+    st1.query_params.clear()
+    #controller.remove('id_usuario')
+    st1.session_state.clear()
+    st.session_state.clear()
+    st1.switch_page("app_autores2.py")
+
+    st1.stop()
+    #st1.rerun()
+    #st1.experimental_rerun()
+######################################################################################################################
+
 
 # Función para formatear el historial
 
@@ -510,29 +667,108 @@ def display_history1(history):
                 </div>
                 """, unsafe_allow_html=True)
 
+# Historial del chat
+
+table_name = "CHHSessionTable"
+
+history1 = StreamlitChatMessageHistory(key="chat_messages1")
+
+# Chain with History, hay una cadena local, esta sirve para enviar al llm, ya que no guarda referencias
+chain_with_history1 = RunnableWithMessageHistory(
+    chain1,
+    lambda session_id: history1,
+    input_messages_key="question",
+    history_messages_key="history1",
+    output_messages_key="response",
+)
 
 
-# Clear Chat History function
-def clear_chat_history():
-    history1.clear()
-    st1.session_state.messages1 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
+# Crear instancia del historial
+base_session_id_hayek = st.session_state.username # Ejemplo de SessionId único
+extra_identifier_hayek = "hayek"
+# Concatenar el identificador adicional
+session_id = f"{base_session_id_hayek}-{extra_identifier_hayek}"
+chat_history1 = CustomDynamoDBChatMessageHistory1(table_name=table_name, session_id=session_id)
+
+
 
 with st1.sidebar:
+    st1.divider()
     st1.title('Friedrich A. Hayek 🔗')
    # streaming_on = st1.toggle('Streaming (Mostrar generación de texto en tiempo real)', value=True)
     streaming_on = True
    # st1.button('Limpiar chat', on_click=clear_chat_history)
 
 
+    #########################################################################################
+
+    # Llenando el history local, (esto es lo que se envia al LLM)
+    history1.clear() #para evitar duplicados
+    chat_history_data = chat_history1.get_history()
+
+    # Copiar mensajes al historial local (sin referencias)
+    for message in chat_history_data.get("History", []):
+        
+            # Crear el objeto de mensaje adecuado
+        if message["data"]["type"] == "human":
+            msg_obj = HumanMessage(content=message["data"]["content"])
+        else:
+            msg_obj = AIMessage(content=message["data"]["content"])
+            
+        # Agregar al historial local
+        #history.add_message(formatted_message["role"], formatted_message["content"])
+        # Agregar el mensaje al historial local
+        history1.add_message(msg_obj)
+
+    ########################################################################################
+
+
     with st1.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
-        display_history1(history1.messages) 
+         display_history1(history1.messages) 
 
     st1.divider()
 
 
+    ##########################################################################################
+    # Llenando el session_state local
+    if "messages1" not in st1.session_state:
+
+            st1.session_state.messages1 = []
+        
+            # Cargar los mensajes guardados de dynamo DB
+            #stored_messages= chat_history.get_history()["History"] ##history.messages
+            stored_messages = chat_history1.get_history().get("History", [])  # Proveer una lista vacía si no hay historial
+
+            
+            print(stored_messages)
+
+            if stored_messages:
+ 
+                # Llenar el estado de la sesion con los mensajes obtenidos, importante que se utilizan el rol user / assistant
+
+                for msg in stored_messages:
+                # Determinar el rol
+                    role = "user" if msg["data"]["type"] == "human" else "assistant"
+            
+                    # Crear el mensaje base con citations como campo separado
+                    message = {
+                        "role": role,
+                        "content": msg["data"]["content"],
+                        "citations": msg["data"].get("citations", [])  # Agregar citations si existen, de lo contrario una lista vacía
+                    }
+                        # Agregar al estado
+                    st1.session_state.messages1.append(message)
+            else :
+                
+                # Si no hay historial, mostrar mensaje inicial del asistente
+                st1.session_state.messages1.append({"role": "assistant", "content": "Pregúntame sobre economía"})
+
+            
+
+
 # Initialize session state for messages if not already present
-if "messages1" not in st1.session_state:
-    st1.session_state.messages1 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
+#if "messages1" not in st1.session_state:
+ #   st1.session_state.messages1 = [{"role": "assistant", "content": "Pregúntame sobre economía"}]
 
 # Display chat messages
 #for message in st1.session_state.messages1:
@@ -540,24 +776,32 @@ if "messages1" not in st1.session_state:
 #        st1.write(message["content"])
 
 
+
+
 # Mostrar historial de chat con referencias
 for message in st1.session_state.messages1:
     with st1.chat_message(message["role"]):
         st1.write(message["content"])
-        
-        # Mostrar referencias si existen
-        if "citations" in message and message["citations"]:
+
+
+        # Verificar si hay referencias y agregar un expander si existen
+        if message.get("citations"):
             with st1.expander("Mostrar referencias >"):
                 for citation in message["citations"]:
-                    st1.write(f"**Contenido:** {citation.page_content}")
-                    s3_uri = citation.metadata['location']['s3Location']['uri']
-                    bucket, key = parse_s3_uri(s3_uri)
-                    st1.write(f"**Fuente:** *{key}*")
-                    st1.write("**Score**:", citation.metadata['score'])
+                    # Mostrar cada referencia con su contenido y fuente, este formato también puede ser utilizado
+                   # st.write(f"- {citation['page_content']} (Fuente: {citation['metadata']['source']})")
+                      # Mostrar cada referencia con su contenido y fuente
+                    st1.write(f" **Contenido:** {citation['page_content']} ")
+                    st1.write(f" **Fuente:** {citation['metadata']['source']}")
+                    #st1.write(f" **Score**: {citation['metadata']['score']}")
                     st1.write("--------------")
+                    score = (citation['metadata']['score'])
+
+        #            st1.write("**Score**:", citation.metadata['score'])
+        #            st1.write("--------------")
 
 # Chat Input - User Prompt 
-if prompt := st1.chat_input():
+if prompt := st1.chat_input("Escribe tu mensaje aquí..."):
     st1.session_state.messages1.append({"role": "user", "content": prompt})
     with st1.chat_message("user"):
         st1.write(prompt)
@@ -570,7 +814,7 @@ if prompt := st1.chat_input():
             placeholder1 = st1.empty()
             full_response1 = ''
             for chunk in chain_with_history1.stream(
-                {"question" : prompt, "history1" : history1},
+                {"question" : prompt, "history1" : chat_history1},
                 config1
             ):
                 if 'response' in chunk:
@@ -581,28 +825,45 @@ if prompt := st1.chat_input():
             placeholder1.markdown(full_response1)
             # Citations with S3 pre-signed URL
             citations1 = extract_citations(full_context1)
+            formatted_citations1 = []  # Lista para almacenar las citas en el formato deseado
+
             with st1.expander("Mostrar referencias >"):
                 for citation in citations1:
                     st1.write("**Contenido:** ", citation.page_content)
-                    s3_uri = citation.metadata['location']['s3Location']['uri']
-                    bucket, key = parse_s3_uri(s3_uri)
-                      #  presigned_url = create_presigned_url(bucket, key)
-                     #   if presigned_url:
-                     #       st.markdown(f"**Fuente:** [{s3_uri}]({presigned_url})")
-                     #   else:
-                      #  st.write(f"**Fuente**: {s3_uri} (Presigned URL generation failed)")
-                    st1.write(f"**Fuente**: *{key}* ")
-       
-                    st1.write("**Score**:", citation.metadata['score'])
+                    source = ""
+                    if "location" in citation.metadata and "s3Location" in citation.metadata["location"]:
+                        s3_uri = citation.metadata["location"]["s3Location"]["uri"]
+                        bucket, key = parse_s3_uri(s3_uri)
+                        st1.write(f"**Fuente**: *{key}* ")
+                        source = key
+                        score= citation.metadata['score']
+
+                    else:
+                        st1.write("**Fuente:** No disponible")
+                       # st1.write("**Score**:", citation.metadata['score'])
                     st1.write("--------------")
 
-            # session_state append
-            #st1.session_state.messages1.append({"role": "assistant", "content": full_response1})
+                    # Agregar al formato de placeholder_citations
+                    formatted_citations1.append({
+                            "page_content": citation.page_content,
+                            "metadata": {
+                                "source": source,
+                                "score" : str(score)
+                            }
+                        })
+
+            
+            human_message = format_message(prompt, "human")
+            chat_history1.update_history(human_message)
+
+            # Crear el mensaje del asistente(chatbot) con citas
+            ai_message = format_message(full_response1, "ai", formatted_citations1)
+            chat_history1.update_history(ai_message)
 
 
              #session_state con referencias
             st1.session_state.messages1.append({
             "role": "assistant",
             "content": full_response1,
-            "citations": citations1  # Guardar referencias junto con la respuesta.
+            "citations": formatted_citations1  # Guardar referencias junto con la respuesta.
             })
