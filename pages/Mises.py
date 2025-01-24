@@ -367,7 +367,7 @@ if not st3.session_state["authentication_status"]:
     #controller.remove('id_usuario')
     st3.switch_page("app_autores2.py")
     st3.session_state.clear()
-    st.session_state.clear()
+    st.session_state.clear() 
     st3.stop()
     #st1.rerun()
     #st1.experimental_rerun()

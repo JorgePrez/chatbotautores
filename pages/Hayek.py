@@ -740,7 +740,7 @@ with st1.sidebar:
             stored_messages = chat_history1.get_history().get("History", [])  # Proveer una lista vacía si no hay historial
 
             
-            print(stored_messages)
+            #print(stored_messages)
 
             if stored_messages:
  
