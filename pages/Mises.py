@@ -48,6 +48,7 @@ def callbackclear(params=None):
 
 def authenticated_menu():
     # Mostrar un menú de navegación para usuarios autenticados
+    st3.sidebar.success(f"Usuario: {st3.session_state.username}")
     st3.sidebar.page_link("app_autores2.py", label="Todos los autores")
     st3.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
     st3.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")

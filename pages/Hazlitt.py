@@ -50,6 +50,7 @@ def callbackclear(params=None):
 
 def authenticated_menu():
     # Mostrar un menú de navegación para usuarios autenticados
+    st2.sidebar.success(f"Usuario: {st2.session_state.username}")
     st2.sidebar.page_link("app_autores2.py", label="Todos los autores")
     st2.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
     st2.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")

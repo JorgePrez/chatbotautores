@@ -41,8 +41,6 @@ def authenticated_menu():
     # Show a navigation menu for authenticated users
 
     #st.sidebar.page_link("Todos los autores2.py", label= "Todos los autores")
-    #st.sidebar.success(f"✅ Usuario: {st.session_state['name']}")
-    st.sidebar.success(f"Usuario: {st.session_state.username}")
     st.sidebar.page_link("app_autores2.py", label="Todos los autores")
     st.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
     st.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")
@@ -618,170 +616,35 @@ def authenticator_login():
         config['cookie']['expiry_days']
     )
 
+    # Example Microsoft login widget
+    #try:
+    #    authenticator.experimental_guest_login('Login with Microsoft',
+    #                                       provider='microsoft',
+    #                                       oauth2=config['oauth2'])
+    #                    # Guardar la nueva configuración
+    #    with open('userschh.yaml', 'w') as file:
+    #                yaml.dump(config, file, default_flow_style=False)
+    #except Exception as e:
+    #    st.error(e)
 
-    authenticator.login(single_session=True, fields={ 'Form name':'Iniciar Sesión', 'Username':'Email', 'Password':'Contraseña', 'Login':'Iniciar sesión'})
-
-    #print(authenticator)
-
-    if st.session_state["authentication_status"]:
-        #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
-       #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
-        authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
-        st.divider()
-        #st.write(f'Welcome *{st.session_state["name"]}*')
-        #st.write(f'{st.session_state}')
-        #st.write(f'Usuario: *{st.session_state["username"]}*')
-        #st.write(f'Welcome *{st.session_state["id_usar"]}*')
-        #st.title('Chatbot')
-        authenticated_menu()
-        main()
-
-
-        # enter the rest of the streamlit app here
-    elif st.session_state["authentication_status"] is False:
-        st.error('Nombre de usuario / Contraseña es incorrecta')
-    elif st.session_state["authentication_status"] is None:
-        st.warning('Por favor introduzca su nombre de usuario y contraseña')
-
-
-    st.divider()
-
-
-    # Mostrar unicamente en la pantalla de autenticacion
-    if not st.session_state["authentication_status"]:
-
-    # Botón para mostrar/ocultar el registro
-        if st.button("Registrar nuevo usuario"):
-                st.session_state["show_register_form"] = True
-
-            # Mostrar formulario de registro si el botón fue presionado
-        if st.session_state["show_register_form"]:
-                try:
-                    email_of_registered_user, username_of_registered_user, name_of_registered_user = authenticator.register_user(
-                        merge_username_email=True, 
-                        captcha=False, 
-                        fields={
-                            'Form name': 'Registrar usuario',
-                            'First name': 'Nombre',
-                            'Last name': 'Apellido',
-                            'Email': 'Email',
-                            'Password': 'Contraseña',
-                            'Repeat password': 'Repetir contraseña',
-                            'Password hint': 'Pista de contraseña (Ingresa una frase que te ayude a recordarla)',
-                            'Register': 'Registrar Usuario'
-                        }
-                    )
-                    if email_of_registered_user:
-                        st.success('Usuario registrado exitosamente, por favor inicia sesión con tu correo y contraseña')
-                        st.session_state["show_register_form"] = False  # Ocultar el formulario tras éxito
-                except Exception as e:
-                    st.error(e)
-
-                # Guardar la nueva configuración
-                with open('userschh.yaml', 'w') as file:
+    
+    # Example Google login widget
+    try:
+        authenticator.experimental_guest_login('Login with Google',
+                                           provider='google',
+                                           oauth2=config['oauth2'])
+        
+                        # Guardar la nueva configuración
+        with open('userschh.yaml', 'w') as file:
                     yaml.dump(config, file, default_flow_style=False)
 
-
-
-def authenticator_login2():
-
-    import yaml
-    from yaml.loader import SafeLoader
-    with open('userschh.yaml') as file:
-        config = yaml.load(file, Loader=SafeLoader)
-
-    # Inicializar el estado del botón si no existe
-    if "show_register_form" not in st.session_state:
-        st.session_state["show_register_form"] = False
-
-  #  st.set_page_config(page_title='Chatbot CHH')
-    st.set_page_config(page_title='Chatbot CHH')
-
-
-    authenticator = stauth.Authenticate(
-        config['credentials'],
-        config['cookie']['name'],
-        config['cookie']['key'],
-        config['cookie']['expiry_days']
-    )
-
-    #st.title("🔐 Bienvenido al Chatbot CHH")
-
-    # 🔹 Login Manual con Usuario y Contraseña
-    authenticator.login(single_session=True, fields={
-        'Form name': 'Iniciar Sesión',
-        'Username': 'Email',
-        'Password': 'Contraseña',
-        'Login': 'Iniciar sesión'
-    })
-
-    # 🔹 Login con Google OAuth 2.0
-    #st.divider()
-    #st.subheader("Inicia sesión con Google:")
-    
-    try:
-        #st.divider()
-        st.write("\n")  
-        authenticator.experimental_guest_login('🔵 Iniciar sesión con cuenta de Google',
-                                               provider='google',
-                                               oauth2=config['oauth2'])
     except Exception as e:
         st.error(e)
 
-    #st.divider()
-
-    # 🔹 Manejo de Sesión
-    if st.session_state["authentication_status"]:
-        authenticator.logout("Cerrar Sesión", "sidebar")
-      ##  st.success(f"✅ Bienvenido, {st.session_state['name']}!")
-        authenticated_menu()
-        main()
-    
-    elif st.session_state["authentication_status"] is False:
-        st.error('❌ Nombre de usuario / Contraseña incorrectos.')
-    
-    elif st.session_state["authentication_status"] is None:
-        #st.divider()
-        #st.warning("⚠️ Para acceder: \n 1️ Presiona 'Registrar nuevo usuario'.\n 2 Luego, ingresa con tu usuario y contraseña 🔑 \n o inicia sesión con Google 🔵.")
-        st.warning("Puedes acceder de las siguientes maneras: \n- Registrarte y luego ingresar tu usuario y contraseña. \n- Iniciar sesión con Google. ")
 
 
-
-
-
-    # 🔹 Registro de Nuevos Usuarios
-    if not st.session_state["authentication_status"]:
-        #st.divider()
-        if st.button("📝 Registrar nuevo usuario"):
-            st.session_state["show_register_form"] = True
-
-        if st.session_state["show_register_form"]:
-            try:
-                email_of_registered_user, username_of_registered_user, name_of_registered_user = authenticator.register_user(
-                    merge_username_email=True, 
-                    captcha=False, 
-                    fields={
-                        'Form name': 'Registrar usuario',
-                        'First name': 'Nombre',
-                        'Last name': 'Apellido',
-                        'Email': 'Email',
-                        'Password': 'Contraseña',
-                        'Repeat password': 'Repetir contraseña',
-                        'Password hint': 'Pista de contraseña',
-                        'Register': 'Registrar Usuario'
-                    }
-                )
-                if email_of_registered_user:
-                    st.success('✅ Usuario registrado con éxito. Inicia sesión.')
-                    st.session_state["show_register_form"] = False
-            except Exception as e:
-                st.error(e)
-
-            # Guardar la nueva configuración
-            with open('userschh.yaml', 'w') as file:
-                yaml.dump(config, file, default_flow_style=False)
 
 
 
 if __name__ == "__main__":
-    authenticator_login2()
+    authenticator_login()
