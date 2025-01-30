@@ -725,6 +725,11 @@ def authenticator_login2():
         authenticator.experimental_guest_login('🔵 Iniciar sesión con cuenta de Google',
                                                provider='google',
                                                oauth2=config['oauth2'])
+        
+        # Guardar la nueva configuración
+        with open('userschh.yaml', 'w') as file:
+                    yaml.dump(config, file, default_flow_style=False)
+
     except Exception as e:
         st.error(e)
 
