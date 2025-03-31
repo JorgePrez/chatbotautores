@@ -1,13 +1,9 @@
-
-
 # ------------------------------------------------------
 # Streamlit
 # Knowledge Bases for Amazon Bedrock and LangChain 🦜️🔗
 # ------------------------------------------------------
-
 import boto3
 import logging
-
 from typing import List, Dict
 from pydantic import BaseModel
 from operator import itemgetter
@@ -20,15 +16,14 @@ from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 import streamlit as st
 import streamlit as st3
-
 from langchain_community.chat_message_histories import DynamoDBChatMessageHistory
 import uuid
-
 from langchain.schema import HumanMessage, AIMessage
 import streamlit_authenticator as stauth
-
-
 from streamlit_cookies_controller import CookieController
+import streamlit.components.v1 as components
+import random
+
 
 
 def callbackclear(params=None):
@@ -278,23 +273,6 @@ def format_message(content, message_type="human", citations=None):
     return {"data": data, "type": message_type}
 
 
-# Streamlit Chat Message History
-#history3 = StreamlitChatMessageHistory(key="chat_messages3")
-
-# Chain with History
-#chain_with_history3 = RunnableWithMessageHistory(
-#    chain3,
-#    lambda session_id: history3,
-#    input_messages_key="question",
-#    history_messages_key="history3",
-#    output_messages_key="response",
-#)
-
-
-
-
-
-
 # ------------------------------------------------------
 # Pydantic data model and helper function for Citations
 
@@ -334,8 +312,68 @@ def parse_s3_uri(uri: str) -> tuple:
 
 # Page title
 st3.set_page_config(page_title='Chatbot CHH')
+
+st3.markdown(
+    """
+    <style>
+        /* Ocultar el menú de los tres puntos */
+        #MainMenu {
+            visibility: hidden;
+        }
+        
+        /* Ocultar el botón "Deploy" */
+        .stAppDeployButton {
+            visibility: hidden;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st3.subheader('Ludwig von Mises 🔗', divider='rainbow')
 streaming_on = True
+
+cols = st3.columns(4)
+
+#suggestions = [
+#    "¿Qué es la economía?",
+#    "¿Qué dice Mises sobre la acción humana?",
+#    "¿Cuál es el rol del Estado según Hayek?",
+#    "¿Qué opinaba Hazlitt sobre la inflación?"
+#]
+
+mises_questions = [
+    "¿Qué es la praxeología según Mises?",
+    "¿Cómo define Mises la acción humana?",
+    "¿Qué papel juega el cálculo económico en el pensamiento de Mises?",
+    "¿Por qué Mises defiende el libre mercado frente al socialismo?",
+    "¿Qué crítica hace Mises a la planificación central?",
+    "¿Qué entiende Mises por intervencionismo?",
+    "¿Cómo explica Mises la función del dinero en la economía?",
+    "¿Cuál es la relación entre individuo y sociedad para Mises?",
+    "¿Qué opina Mises sobre la inflación y su impacto?",
+    "¿Qué dice Mises sobre el conocimiento y los precios?"
+]
+
+
+mises_shuffled_questions = mises_questions.copy()
+random.shuffle(mises_shuffled_questions )
+
+
+# Seleccionar 4 aleatorias una vez por sesión
+if "mises_suggested_questions" not in st3.session_state:
+    st3.session_state.mises_suggested_questions = random.sample(mises_shuffled_questions, 4)
+
+st3.markdown("##### 💬 Sugerencias de preguntas")
+cols = st3.columns(4)
+
+# Chat Input - User Prompt
+for i, question in enumerate(st3.session_state.mises_suggested_questions):
+     with cols[i]:
+         if st3.button(question, key=f"mises_q_{i}"):
+            #st3.session_state.messages3.append({"role": "user", "content": question})
+            st3.session_state["suggested_prompt"] = question
+            st3.rerun()  # Para que se procese automáticamente 
 
 #####################################################################################################################
 
@@ -356,8 +394,31 @@ if st3.session_state["authentication_status"]:
         #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
        #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
         authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar', callback= callbackclear )  # Llamada a la función para limpiar sesión)
+        with st3.sidebar:
+            components.html("""
+        <style>
+            .btn-print {
+                background-color: #ffffff;
+                color: #262730;
+                border: 1px solid rgba(49, 51, 63, 0.2);
+                border-radius: 0.5rem;
+                padding: 0.45rem 1rem;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                width: 100%;
+                transition: background-color 0.2s ease, box-shadow 0.2s ease;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            }
 
+            .btn-print:hover {
+                background-color: #f0f2f6;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            }
+        </style>
 
+        <button class="btn-print" onclick="window.top.print()">🖨️ Print</button>
+    """, height=50)
         st3.divider()
         authenticated_menu()
 
@@ -383,8 +444,13 @@ def display_history1(history):
         #html_content = markdown(message.content)  
         if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
             st3.markdown(
-                f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-radius: 8px; color: #F3F4F6; font-size: 0.9em;">
+                f"""   
+                <div style="padding: 10px; margin-bottom: 10px;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            color: #262730;
+                            font-size: 0.9em;">
                     <strong>Usuario:</strong><br>
                     {content}
                 </div>
@@ -392,7 +458,12 @@ def display_history1(history):
         elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
             st3.markdown(
                 f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-left: 5px solid #FF9F1C; border-radius: 8px; color: #E5E7EB; font-size: 0.9em;">
+                <div style="padding: 10px; margin-bottom: 10px;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            color: #262730;
+                            font-size: 0.9em;">
                     <strong>Chatbot (Ludwig von Mises):</strong><br>
                     {content}
                 </div>
@@ -492,6 +563,14 @@ with st3.sidebar:
                 # Si no hay historial, mostrar mensaje inicial del asistente
                 st3.session_state.messages3.append({"role": "assistant", "content": "Pregúntame sobre economía"})
 
+                                
+                #for i, question in enumerate(suggestions):
+                #    with cols[i]:
+                #        if st3.button(question, key=f"suggested_q_{i}"):
+                            # Simular que el usuario escribió esta pregunta
+                #            st3.session_state.messages3.append({"role": "user", "content": question})
+                            #st3.experimental_rerun()  # Para que se procese automáticamente
+
 ##############################################################################################################################
 
 
@@ -522,8 +601,16 @@ for message in st3.session_state.messages3:
         #            st1.write("**Score**:", citation.metadata['score'])
         #            st1.write("--------------")
 
-# Chat Input - User Prompt 
-if prompt := st3.chat_input("Escribe tu mensaje aquí..."):
+
+
+prompt = st3.chat_input("Escribe tu mensaje aquí...")
+
+# Usar la pregunta sugerida si existe
+if not prompt and "suggested_prompt" in st3.session_state:
+    prompt = st3.session_state.pop("suggested_prompt")  # eliminarla tras usarla
+
+            
+if prompt :
     st3.session_state.messages3.append({"role": "user", "content": prompt})
     with st3.chat_message("user"):
         st3.write(prompt)

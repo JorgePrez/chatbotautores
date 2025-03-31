@@ -26,11 +26,6 @@ from langchain.schema import HumanMessage, AIMessage
 
 import streamlit_authenticator as stauth
 
-import streamlit.components.v1 as components
-import random
-
-
-
 # ------------------------------------------------------
 # Log level
 
@@ -210,8 +205,6 @@ def main():
         retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 20}},
     )
 
-
-
     model = ChatBedrock(
         client=bedrock_runtime,
         model_id=model_id,
@@ -356,129 +349,29 @@ def main():
 
 
 
-    # Preguntas sobre Hayek
-    hayek_questions = [
-        "¿Quién es Friedrich A. Hayek?",
-        "¿Por qué es importante conocer la obra de Friedrich A. Hayek?",
-        "¿Cuál fue la mayor aportación de Friedrich A. Hayek en economía?",
-        "¿Qué es la libertad para Friedrich A. Hayek?",
-        "¿Qué es el concepto de 'orden espontáneo' y por qué es fundamental en la filosofía de Hayek?",
-        "¿Cuál es la relación entre Friedrich A. Hayek y Ludwig von Mises?",
-        "¿Cuál es la relación entre Friedrich A. Hayek y John Maynard Keynes?",
-        "¿De qué se trata Los fundamentos de la libertad?",
-        "¿Por qué es crucial comprender la diferencia entre legislación y ley según Hayek?",
-        "¿Por qué es importante la palabra arbitraria en la definición de libertad de Hayek?",
-        "¿Qué libros escribió Friedrich A. Hayek?",
-        "¿Por qué un estudiante debería estudiar a Friedrich A. Hayek?",
-        "¿Cómo puedo aplicar las ideas de Friedrich A. Hayek en mi vida profesional o académica?",
-        "¿Cuáles son las obras principales de Hayek y de qué tratan?",
-        "¿Qué implicaciones éticas tienen las advertencias de Hayek sobre la planificación centralizada y la libertad individual?",
-        "¿Qué son 'cosmos' y 'taxis' en la teoría de Hayek?",
-        "¿Qué son 'nomos' y 'thesis' según Hayek?",
-        "¿Por qué ganó Friedrich A. Hayek el Premio Nobel?",
-        "¿Qué es la teoría del ciclo económico según Hayek?",
-        "¿Cómo aborda Hayek la relación entre las normas, la moral, tradición y evolución de las leyes?"
-    ]
-
-    # Preguntas sobre Hazlitt
-    hazlitt_questions = [
-        "¿Quién fue Henry Hazlitt?",
-        "¿Quién fue Henry Hazlitt y por qué su obra es relevante en el estudio de la economía moderna?",
-        "¿Cuál fue el impacto de Economía en una lección en la comprensión pública de la economía y cómo sigue siendo relevante hoy?",
-        "¿Cómo define Hazlitt el concepto de consecuencias a corto y largo plazo en las políticas económicas?",
-        "¿Qué es el principio de \"coste invisible\" y cómo lo utiliza Hazlitt para criticar la intervención estatal?",
-        "¿Cómo explica Hazlitt los efectos de la inflación en La crisis inflacionaria y cómo resolverla?",
-        "¿Qué relación tuvo Henry Hazlitt con economistas como Ludwig von Mises y cómo influyó en su pensamiento?",
-        "¿En qué aspectos Henry Hazlitt se distancia del keynesianismo y qué críticas fundamentales realiza en Los críticos de la economía keynesiana?",
-        "¿Cuál es el papel de la moralidad en la economía según Hazlitt, especialmente en Los fundamentos de la moral?",
-        "¿Cómo conecta Hazlitt la libertad individual con el éxito del libre mercado y la prosperidad económica?",
-        "¿Por qué Henry Hazlitt critica la planificación centralizada y cuáles son las consecuencias que anticipa para la libertad individual y la economía?",
-        "¿Cómo argumenta Hazlitt que el gasto gubernamental afecta negativamente a la eficiencia económica y al bienestar social?",
-        "¿Cómo aborda Hazlitt la pobreza en La conquista de la pobreza y qué soluciones propone desde una perspectiva de mercado libre?",
-        "¿Qué enseñanzas pueden extraerse de la obra de Hazlitt para enfrentar los desafíos económicos contemporáneos, como la deuda y la inflación?",
-        "¿Cómo puede un estudiante aplicar las ideas de Hazlitt en su vida profesional o académica para entender mejor las políticas económicas?",
-        "¿Qué aportaciones de Hazlitt siguen siendo cruciales para comprender los debates actuales sobre la política fiscal y monetaria?",
-        "¿Quién fue Henry Hazlitt y cuál fue su contribución al periodismo económico?",
-        "¿Por qué se considera a Hazlitt como uno de los principales divulgadores de la economía del libre mercado?",
-        "¿Cuáles fueron los principales trabajos de Henry Hazlitt, además de Economía en una lección, y qué impacto tuvieron?",
-        "¿Cómo contribuyó Hazlitt a la popularización de las ideas de Ludwig von Mises?",
-        "¿Qué influencias filosóficas y económicas marcaron el pensamiento de Henry Hazlitt?",
-        "¿Cómo se diferencia Hazlitt de otros economistas liberales de su época, como Friedrich Hayek y Milton Friedman?",
-        "¿Cómo definió Henry Hazlitt la relación entre la economía y la moralidad en su obra Los fundamentos de la moral?",
-        "¿Cómo contribuyó Henry Hazlitt al debate sobre la intervención estatal en la economía?",
-        "¿Cómo fue el enfoque de Hazlitt hacia las consecuencias a largo plazo de las políticas económicas, y por qué es importante su perspectiva?",
-        "¿Qué relación tuvo Hazlitt con otras figuras relevantes del liberalismo económico, como Ayn Rand, y cómo influyeron en su pensamiento?"
-    ]
-
-    # Preguntas sobre Mises
-    mises_questions = [
-    "¿Qué es la praxeología según Mises?",
-    "¿Cómo define Mises la acción humana?",
-    "¿Qué papel juega el cálculo económico en el pensamiento de Mises?",
-    "¿Por qué Mises defiende el libre mercado frente al socialismo?",
-    "¿Qué crítica hace Mises a la planificación central?",
-    "¿Qué entiende Mises por intervencionismo?",
-    "¿Cómo explica Mises la función del dinero en la economía?",
-    "¿Cuál es la relación entre individuo y sociedad para Mises?",
-    "¿Qué opina Mises sobre la inflación y su impacto?",
-    "¿Qué dice Mises sobre el conocimiento y los precios?"
-    ]
-
-    # Unir todas las preguntas
-    all_suggested_questions = hayek_questions + hazlitt_questions + mises_questions
-    shuffled_questions_all = all_suggested_questions.copy()
-    random.shuffle(shuffled_questions_all)
-
-    # Seleccionar 3 preguntas aleatorias solo una vez por sesión
-    if "general_suggested_questions" not in st.session_state:
-        st.session_state.general_suggested_questions = random.sample(shuffled_questions_all, 4)
-
-    # Mostrar sugerencias
-    st.markdown("##### 💬 Sugerencias de preguntas")
-    cols = st.columns(4)
-    for i, question in enumerate(st.session_state.general_suggested_questions):
-        with cols[i]:
-            if st.button(question, key=f"general_q_{i}"):
-                st.session_state["suggested_prompt"] = question
-                st.rerun()
-
-
-
-
     # Función para formatear el historial
+
     def display_history1(history):
         for message in history:
             content = message.content
-
-            if message.__class__.__name__ == 'HumanMessage':
+            #safe_content = html.escape(message.content)  # Escapar HTML
+            #html_content = markdown(message.content)  
+            if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
                 st.markdown(
                     f"""
-                    <div style="padding: 10px; margin-bottom: 10px;
-                                background-color: #ffffff;
-                                border-radius: 8px;
-                                border: 1px solid rgba(49, 51, 63, 0.2);
-                                color: #262730;
-                                font-size: 0.9em;">
+                    <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-radius: 8px; color: #F3F4F6; font-size: 0.9em;">
                         <strong>Usuario:</strong><br>
                         {content}
                     </div>
                     """, unsafe_allow_html=True)
-            
-            elif message.__class__.__name__ == 'AIMessage':
+            elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
                 st.markdown(
                     f"""
-                    <div style="padding: 10px; margin-bottom: 10px;
-                                background-color: #ffffff;
-                                border-left: 5px solid #FF9F1C;
-                                border-radius: 8px;
-                                border: 1px solid rgba(49, 51, 63, 0.2);
-                                color: #262730;
-                                font-size: 0.9em;">
+                    <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-left: 5px solid #FF9F1C; border-radius: 8px; color: #E5E7EB; font-size: 0.9em;">
                         <strong>Chatbot (Todos los autores):</strong><br>
                         {content}
                     </div>
                     """, unsafe_allow_html=True)
-
                 
 
     # Historial del chat
@@ -608,14 +501,9 @@ def main():
         ######################################################################################
 
 
-    prompt = st.chat_input("Escribe tu mensaje aquí...")
-
-    # Usar la pregunta sugerida si existe
-    if not prompt and "suggested_prompt" in st.session_state:
-        prompt = st.session_state.pop("suggested_prompt")  # eliminarla tras usarla
 
     # Chat Input - User Prompt
-    if prompt :
+    if prompt := st.chat_input("Escribe tu mensaje aquí..."):
         # Mostrar el mensaje del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -690,7 +578,6 @@ def main():
 
             # st.session_state.messages.append(message)
             # Hacer append del primer mensaje
-            
 
             
                 #session_state con referencias
@@ -702,9 +589,6 @@ def main():
                 
 
 def authenticator_login():
-
-
-
 
 
     
@@ -721,7 +605,9 @@ def authenticator_login():
 
 
     ## st.set_page_config(page_title='Procesos UFM 🔗')
-    
+    st.set_page_config(page_title='Chatbot CHH')
+
+
     # Pre-hashing all plain text passwords once
     #stauth.Hasher.hash_passwords(config['credentials'])
 
@@ -738,40 +624,9 @@ def authenticator_login():
     #print(authenticator)
 
     if st.session_state["authentication_status"]:
-
-
-
-       
-
-
         #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
        #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
         authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
-        with st.sidebar:
-            components.html("""
-        <style>
-            .btn-print {
-                background-color: #ffffff;
-                color: #262730;
-                border: 1px solid rgba(49, 51, 63, 0.2);
-                border-radius: 0.5rem;
-                padding: 0.45rem 1rem;
-                font-size: 1rem;
-                font-weight: 500;
-                cursor: pointer;
-                width: 100%;
-                transition: background-color 0.2s ease, box-shadow 0.2s ease;
-                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-            }
-
-            .btn-print:hover {
-                background-color: #f0f2f6;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-            }
-        </style>
-
-        <button class="btn-print" onclick="window.top.print()">🖨️ Print</button>
-    """, height=50)
         st.divider()
         #st.write(f'Welcome *{st.session_state["name"]}*')
         #st.write(f'{st.session_state}')
@@ -780,8 +635,6 @@ def authenticator_login():
         #st.title('Chatbot')
         authenticated_menu()
         main()
-
-
 
 
         # enter the rest of the streamlit app here

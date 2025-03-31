@@ -5,7 +5,6 @@
 
 import boto3
 import logging
-
 from typing import List, Dict
 from pydantic import BaseModel
 from operator import itemgetter
@@ -16,16 +15,17 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_aws import ChatBedrock
 from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-
 import streamlit as st
 import streamlit as st1
 from langchain_community.chat_message_histories import DynamoDBChatMessageHistory
 import uuid
-
 from langchain.schema import HumanMessage, AIMessage
 import streamlit_authenticator as stauth
-
 from streamlit_cookies_controller import CookieController
+import streamlit.components.v1 as components
+import random
+
+
 
 
 #from streamlit_cookies_manager import EncryptedCookieManager
@@ -546,21 +546,6 @@ def format_message(content, message_type="human", citations=None):
 
 
 
-############################################################
-
-
-# Streamlit Chat Message History
-#history1 = StreamlitChatMessageHistory(key="chat_messages1")
-
-# Chain with History
-#chain_with_history1 = RunnableWithMessageHistory(
-#    chain1,
-#    lambda session_id: history1,
-#    input_messages_key="question",
-#    history_messages_key="history1",
-#    output_messages_key="response",
-#)
-
 # ------------------------------------------------------
 # Pydantic data model and helper function for Citations
 
@@ -602,8 +587,67 @@ def parse_s3_uri(uri: str) -> tuple:
 
 st1.set_page_config(page_title='Chatbot CHH')
 
+
+st1.markdown(
+    """
+    <style>
+        /* Ocultar el menú de los tres puntos */
+        #MainMenu {
+            visibility: hidden;
+        }
+        
+        /* Ocultar el botón "Deploy" */
+        .stAppDeployButton {
+            visibility: hidden;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 st1.subheader('Friedrich A. Hayek 🔗', divider='rainbow')
 streaming_on = True
+
+# Lista de preguntas sobre Hayek
+hayek_questions = [
+    "¿Quién es Friedrich A. Hayek?",
+    "¿Por qué es importante conocer la obra de Friedrich A. Hayek?",
+    "¿Cuál fue la mayor aportación de Friedrich A. Hayek en economía?",
+    "¿Qué es la libertad para Friedrich A. Hayek?",
+    "¿Qué es el concepto de 'orden espontáneo' y por qué es fundamental en la filosofía de Hayek?",
+    "¿Cuál es la relación entre Friedrich A. Hayek y Ludwig von Mises?",
+    "¿Cuál es la relación entre Friedrich A. Hayek y John Maynard Keynes?",
+    "¿De qué se trata Los fundamentos de la libertad?",
+    "¿Por qué es crucial comprender la diferencia entre legislación y ley según Hayek?",
+    "¿Por qué es importante la palabra arbitraria en la definición de libertad de Hayek?",
+    "¿Qué libros escribió Friedrich A. Hayek?",
+    "¿Por qué un estudiante debería estudiar a Friedrich A. Hayek?",
+    "¿Cómo puedo aplicar las ideas de Friedrich A. Hayek en mi vida profesional o académica?",
+    "¿Cuáles son las obras principales de Hayek y de qué tratan?",
+    "¿Qué implicaciones éticas tienen las advertencias de Hayek sobre la planificación centralizada y la libertad individual?",
+    "¿Qué son 'cosmos' y 'taxis' en la teoría de Hayek?",
+    "¿Qué son 'nomos' y 'thesis' según Hayek?",
+    "¿Por qué ganó Friedrich A. Hayek el Premio Nobel?",
+    "¿Qué es la teoría del ciclo económico según Hayek?",
+    "¿Cómo aborda Hayek la relación entre las normas, la moral, tradición y evolución de las leyes?"
+]
+
+hayek_shuffled_question = hayek_questions.copy()
+random.shuffle(hayek_shuffled_question )
+
+# Seleccionar 3 preguntas aleatorias solo una vez por sesión
+if "hayek_suggested_questions" not in st1.session_state:
+    st1.session_state.hayek_suggested_questions = random.sample(hayek_shuffled_question , 4)
+
+# Mostrar los botones de sugerencias
+st1.markdown("##### 💬 Sugerencias de preguntas")
+cols = st1.columns(4)
+for i, question in enumerate(st1.session_state.hayek_suggested_questions):
+    with cols[i]:
+        if st1.button(question, key=f"hayek_q_{i}"):
+            st1.session_state["suggested_prompt"] = question
+            st1.rerun()
+
 
 #####################################################################################################################
 
@@ -624,6 +668,31 @@ if st1.session_state["authentication_status"]:
         #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
        #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
         authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar', callback= callbackclear )  # Llamada a la función para limpiar sesión)
+        with st1.sidebar:
+            components.html("""
+        <style>
+            .btn-print {
+                background-color: #ffffff;
+                color: #262730;
+                border: 1px solid rgba(49, 51, 63, 0.2);
+                border-radius: 0.5rem;
+                padding: 0.45rem 1rem;
+                font-size: 1rem;
+                font-weight: 500;
+                cursor: pointer;
+                width: 100%;
+                transition: background-color 0.2s ease, box-shadow 0.2s ease;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+            }
+
+            .btn-print:hover {
+                background-color: #f0f2f6;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            }
+        </style>
+
+        <button class="btn-print" onclick="window.top.print()">🖨️ Print</button>
+    """, height=50)
 
 
         st1.divider()
@@ -654,7 +723,12 @@ def display_history1(history):
         if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
             st1.markdown(
                 f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-radius: 8px; color: #F3F4F6; font-size: 0.9em;">
+                <div style="padding: 10px; margin-bottom: 10px;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            color: #262730;
+                            font-size: 0.9em;">
                     <strong>Usuario:</strong><br>
                     {content}
                 </div>
@@ -662,7 +736,12 @@ def display_history1(history):
         elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
             st1.markdown(
                 f"""
-                <div style="padding: 10px; margin-bottom: 10px; background-color: #0e1117; border-left: 5px solid #FF9F1C; border-radius: 8px; color: #E5E7EB; font-size: 0.9em;">
+                <div style="padding: 10px; margin-bottom: 10px;
+                            background-color: #ffffff;
+                            border-radius: 8px;
+                            border: 1px solid rgba(49, 51, 63, 0.2);
+                            color: #262730;
+                            font-size: 0.9em;">
                     <strong>Chatbot (Friedrich A. Hayek) :</strong><br>
                     {content}
                 </div>
@@ -801,8 +880,15 @@ for message in st1.session_state.messages1:
         #            st1.write("**Score**:", citation.metadata['score'])
         #            st1.write("--------------")
 
+
+prompt = st1.chat_input("Escribe tu mensaje aquí...")
+
+# Usar la pregunta sugerida si existe
+if not prompt and "suggested_prompt" in st1.session_state:
+    prompt = st1.session_state.pop("suggested_prompt")  # eliminarla tras usarla
+
 # Chat Input - User Prompt 
-if prompt := st1.chat_input("Escribe tu mensaje aquí..."):
+if prompt :
     st1.session_state.messages1.append({"role": "user", "content": prompt})
     with st1.chat_message("user"):
         st1.write(prompt)

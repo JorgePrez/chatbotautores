@@ -1,9 +1,13 @@
+
+
 # ------------------------------------------------------
 # Streamlit
 # Knowledge Bases for Amazon Bedrock and LangChain 🦜️🔗
 # ------------------------------------------------------
+
 import boto3
 import logging
+
 from typing import List, Dict
 from pydantic import BaseModel
 from operator import itemgetter
@@ -15,22 +19,25 @@ from langchain_aws import ChatBedrock
 from langchain_aws import AmazonKnowledgeBasesRetriever
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 import streamlit as st
-import streamlit as st2
+import streamlit as st3
+
 from langchain_community.chat_message_histories import DynamoDBChatMessageHistory
 import uuid
+
 from langchain.schema import HumanMessage, AIMessage
 import streamlit_authenticator as stauth
-from streamlit_cookies_controller import CookieController
-import streamlit.components.v1 as components
-import random
 
+
+from streamlit_cookies_controller import CookieController
+
+import streamlit.components.v1 as components
 
 
 
 def callbackclear(params=None):
-    controller2 = CookieController(key="cookieHazlitt")
-    st2.success("Sesión cerrada correctamente")
-    st2.markdown(
+    controller3 = CookieController(key="cookieMises")
+    st3.success("Sesión cerrada correctamente")
+    st3.markdown(
     """
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
     <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
@@ -39,16 +46,16 @@ def callbackclear(params=None):
     unsafe_allow_html=True
     )
 
-    controller2.remove('id_usuario')
+    controller3.remove('id_usuario')
 
 
 def authenticated_menu():
     # Mostrar un menú de navegación para usuarios autenticados
-    st2.sidebar.success(f"Usuario: {st2.session_state.username}")
-    st2.sidebar.page_link("app_autores2.py", label="Todos los autores")
-    st2.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
-    st2.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")
-    st2.sidebar.page_link("pages/Mises.py", label="Ludwig von Mises")
+    st3.sidebar.success(f"Usuario: {st3.session_state.username}")
+    st3.sidebar.page_link("app_autores2.py", label="Todos los autores")
+    st3.sidebar.page_link("pages/Hayek.py", label="Friedrich A. Hayek")
+    st3.sidebar.page_link("pages/Hazlitt.py", label="Henry Hazlitt")
+    st3.sidebar.page_link("pages/Mises.py", label="Ludwig von Mises")
     #st1.divider()
 
 # ------------------------------------------------------
@@ -77,60 +84,63 @@ model_kwargs =  {
 # ------------------------------------------------------
 # LangChain - RAG chain with chat history
 
-prompt2old2 = ChatPromptTemplate.from_messages(
+
+
+
+prompt3old3 = ChatPromptTemplate.from_messages(
     [
         ("system", "You are a helpful assistant, always answer in Spanish"
          "Answer the question based only on the following context:\n {context}"),
-        MessagesPlaceholder(variable_name="history2"),
+        MessagesPlaceholder(variable_name="history3"),
         ("human", "{question}"),
     ]
 )
 
-SYSTEM_PROMPT2 = (
+SYSTEM_PROMPT3 = (
 """
 ### Base de conocimientos:  
 {context}  
 
 ---
 
-# Prompt del Sistema: Chatbot Especializado en Henry Hazlitt y Filosofía Económica  
+# Prompt del Sistema: Chatbot Especializado en Ludwig von Mises y Filosofía Económica  
 
 ## **Identidad del Asistente**  
-Eres un asistente virtual especializado exclusivamente en proporcionar explicaciones claras y detalladas sobre Henry Hazlitt y temas relacionados con su filosofía económica. Tu propósito es facilitar el aprendizaje autónomo y la comprensión de conceptos complejos desarrollados por Hazlitt, así como su impacto en la Escuela Austriaca de Economía y el pensamiento económico en general. Respondes en español e inglés de manera estructurada y personalizada.  
+Eres un asistente virtual especializado exclusivamente en proporcionar explicaciones claras y detalladas sobre Ludwig von Mises y temas relacionados con su filosofía económica. Tu propósito es facilitar el aprendizaje autónomo y la comprensión de conceptos desarrollados por Mises, incluyendo su impacto en la Escuela Austriaca de Economía, sus teorías sobre el cálculo económico, el praxeologismo y otros temas clave. Respondes en español e inglés, adaptando tu estilo a las necesidades del usuario.  
 
 ## **Público Objetivo**  
 ### **Audiencia Primaria**:  
 - **Estudiantes** (de 18 a 45 años) de la **Universidad Francisco Marroquín (UFM)** en Guatemala.  
-- Carreras: economía, derecho, ciencias políticas, ingeniería empresarial, administración de empresas, filosofía, y otras relacionadas.  
-- Principal enfoque en estudiantes de pregrado interesados en economía aplicada y las contribuciones de Hazlitt.  
+- Carreras: economía, derecho, ciencias políticas, administración de empresas, filosofía, y otras relacionadas.  
+- Principal enfoque en estudiantes de pregrado interesados en economía y las contribuciones de Mises a la teoría económica.  
 
 ### **Audiencia Secundaria**:  
-- Profesores y académicos interesados en usar a Hazlitt como referencia en debates sobre políticas públicas, teoría económica y ética en los mercados.  
+- Profesores, académicos e investigadores interesados en las aportaciones de Mises a la economía, la filosofía política y las políticas públicas.  
 
 ### **Audiencia Terciaria**:  
-- Economistas, empresarios y entusiastas de la economía en **Latinoamérica, España**, y otras regiones hispanohablantes o angloparlantes interesados en las aplicaciones prácticas de las ideas de Hazlitt.  
+- Economistas, emprendedores y entusiastas de la economía en **Latinoamérica, España**, y otras regiones interesados en la Escuela Austriaca, en particular las teorías de Mises sobre mercados libres, intervención estatal y praxeología.  
 
 ---
 
 ## **Metodología para Respuestas**  
 Las respuestas deben seguir una estructura lógica y organizada basada en la metodología **5W 1H** (qué, quién, cuándo, dónde, por qué, cómo). Sin embargo, no deben incluir encabezados explícitos. En su lugar:  
 - **Introduce el tema o concepto de manera clara y directa.**  
-- Amplía con definiciones, ejemplos históricos, y aplicaciones contemporáneas.  
+- Amplía con definiciones, ejemplos históricos y aplicaciones contemporáneas.  
 - Finaliza con reflexiones o conexiones relevantes al tema.  
 
 ---
 
 ## **Estructura Implícita de Respuesta**  
-1. **Contexto inicial**: Presentar el tema con énfasis en su relevancia.  
-2. **Desarrollo de ideas**: Explorar conceptos clave, ejemplos prácticos y aplicaciones modernas.  
+1. **Contexto inicial**: Presentar el tema con énfasis en su relevancia y contribuciones de Mises.  
+2. **Desarrollo de ideas**: Explorar conceptos clave, antecedentes históricos, ejemplos prácticos y aplicaciones modernas.  
 3. **Cierre reflexivo**: Resumir la idea principal y conectar con implicaciones actuales o debates relevantes.  
 
 ---
 
 ## **Tono y Estilo**  
-- **Profesional y académico**, con un enfoque claro y motivador.  
-- Lenguaje accesible, preciso y libre de tecnicismos innecesarios.  
-- Estructura fluida que facilite la comprensión del lector.  
+- **Profesional y académico**, con un enfoque claro, inspirador y accesible.  
+- Lenguaje preciso, enriquecedor y libre de tecnicismos innecesarios.  
+- Estructura fluida que facilite el aprendizaje del lector.  
 
 ---
 
@@ -176,69 +186,55 @@ Las respuestas deben seguir una estructura lógica y organizada basada en la met
 Las respuestas deben ser:  
 - **Relevantes**: Directamente relacionadas con la pregunta planteada.  
 - **Claras**: Presentadas de manera lógica y accesible.  
-- **Precisas**: Fundamentadas en las ideas de Hazlitt y sus aplicaciones.  
+- **Precisas**: Fundamentadas en las ideas de Mises y sus aplicaciones.  
 - **Comprensibles**: Usando un lenguaje claro y enriquecedor.  
 
 ---
 
-## **Ejemplo de Buena Respuesta**  
-**Pregunta**:  
-*"¿Qué significa el concepto de costo de oportunidad según Hazlitt?"*  
-
-El concepto de costo de oportunidad, tal como lo explicó Henry Hazlitt en su libro *"Economía en una lección"*, se refiere a las oportunidades perdidas al tomar una decisión económica. Este principio enfatiza que los recursos son limitados y, por lo tanto, al utilizarlos de una forma, renunciamos a su uso en otras opciones potencialmente valiosas.  
-
-Un ejemplo práctico sería el presupuesto gubernamental: si se destina dinero a un programa específico, esos fondos no estarán disponibles para otros proyectos, como infraestructura o salud pública. Hazlitt subrayó que la clave para entender el costo de oportunidad es considerar no solo los efectos inmediatos de una decisión, sino también sus consecuencias a largo plazo y en sectores no evidentes a primera vista.  
-
-Este concepto sigue siendo crucial para evaluar políticas públicas y decisiones empresariales, destacando la importancia de analizar cuidadosamente las alternativas sacrificadas.  
-
 """
 )
 
-
-# Función para crear el prompt dinámico
-def create_prompt_template2():
+def create_prompt_template3():
     return ChatPromptTemplate.from_messages(
         [
-            ("system", SYSTEM_PROMPT2),
-            MessagesPlaceholder(variable_name="history2"),
+            ("system", SYSTEM_PROMPT3),
+            MessagesPlaceholder(variable_name="history3"),
             ("human", "{question}")
         ]
     )
 
-
-
+#Agregando cambio.
 # Amazon Bedrock - KnowledgeBase Retriever 
-retriever2 = AmazonKnowledgeBasesRetriever(
-    knowledge_base_id="7MFCUWJSJJ", # Knowledge base ID
+retriever3 = AmazonKnowledgeBasesRetriever(
+    knowledge_base_id="4L0WE8NOOH", # Set your Knowledge base ID
     retrieval_config={"vectorSearchConfiguration": {"numberOfResults": 20}},
 )
 
-model2 = ChatBedrock(
+model3 = ChatBedrock(
     client=bedrock_runtime,
     model_id=model_id,
     model_kwargs=model_kwargs,
 )
 
-prompt2 = create_prompt_template2()
+prompt3 = create_prompt_template3()
 
 
-chain2 = (
+chain3 = (
     RunnableParallel({
-        "context": itemgetter("question") | retriever2,
+        "context": itemgetter("question") | retriever3,
         "question": itemgetter("question"),
-        "history2": itemgetter("history2"),
+        "history3": itemgetter("history3"),
     })
-    .assign(response = prompt2 | model2 | StrOutputParser())
+    .assign(response = prompt3 | model3 | StrOutputParser())
     .pick(["response", "context"])
 )
-
 ############################################################
 
 dynamodb = boto3.resource("dynamodb", region_name="us-east-1")  # region
 table_name = "CHHSessionTable"  # Nombre de tu tabla DynamoDB
 
 # Clase para manejar el historial con formato específico
-class CustomDynamoDBChatMessageHistory2:
+class CustomDynamoDBChatMessageHistory3:
     def __init__(self, table_name, session_id):
         self.table = dynamodb.Table(table_name)
         self.session_id = session_id
@@ -307,7 +303,7 @@ def create_presigned_url(bucket_name: str, object_name: str, expiration: int = 3
                                                             'Key': object_name},
                                                     ExpiresIn=expiration)
     except NoCredentialsError:
-        st2.error("AWS credentials not available")
+        st3.error("AWS credentials not available")
         return ""
     return response
 
@@ -323,10 +319,9 @@ def parse_s3_uri(uri: str) -> tuple:
 
 
 # Page title
-st2.set_page_config(page_title='Chatbot CHH')
+st3.set_page_config(page_title='Chatbot CHH')
 
-
-st2.markdown(
+st3.markdown(
     """
     <style>
         /* Ocultar el menú de los tres puntos */
@@ -343,57 +338,8 @@ st2.markdown(
     unsafe_allow_html=True
 )
 
-st2.subheader('Henry Hazlitt 🔗', divider='rainbow')
+st3.subheader('Ludwig von Mises 🔗', divider='rainbow')
 streaming_on = True
-
-
-
-hazlitt_questions = [
-    "¿Quién fue Henry Hazlitt?",
-    "¿Quién fue Henry Hazlitt y por qué su obra es relevante en el estudio de la economía moderna?",
-    "¿Cuál fue el impacto de Economía en una lección en la comprensión pública de la economía y cómo sigue siendo relevante hoy?",
-    "¿Cómo define Hazlitt el concepto de consecuencias a corto y largo plazo en las políticas económicas?",
-    "¿Qué es el principio de \"coste invisible\" y cómo lo utiliza Hazlitt para criticar la intervención estatal?",
-    "¿Cómo explica Hazlitt los efectos de la inflación en La crisis inflacionaria y cómo resolverla?",
-    "¿Qué relación tuvo Henry Hazlitt con economistas como Ludwig von Mises y cómo influyó en su pensamiento?",
-    "¿En qué aspectos Henry Hazlitt se distancia del keynesianismo y qué críticas fundamentales realiza en Los críticos de la economía keynesiana?",
-    "¿Cuál es el papel de la moralidad en la economía según Hazlitt, especialmente en Los fundamentos de la moral?",
-    "¿Cómo conecta Hazlitt la libertad individual con el éxito del libre mercado y la prosperidad económica?",
-    "¿Por qué Henry Hazlitt critica la planificación centralizada y cuáles son las consecuencias que anticipa para la libertad individual y la economía?",
-    "¿Cómo argumenta Hazlitt que el gasto gubernamental afecta negativamente a la eficiencia económica y al bienestar social?",
-    "¿Cómo aborda Hazlitt la pobreza en La conquista de la pobreza y qué soluciones propone desde una perspectiva de mercado libre?",
-    "¿Qué enseñanzas pueden extraerse de la obra de Hazlitt para enfrentar los desafíos económicos contemporáneos, como la deuda y la inflación?",
-    "¿Cómo puede un estudiante aplicar las ideas de Hazlitt en su vida profesional o académica para entender mejor las políticas económicas?",
-    "¿Qué aportaciones de Hazlitt siguen siendo cruciales para comprender los debates actuales sobre la política fiscal y monetaria?",
-    "¿Quién fue Henry Hazlitt y cuál fue su contribución al periodismo económico?",
-    "¿Por qué se considera a Hazlitt como uno de los principales divulgadores de la economía del libre mercado?",
-    "¿Cuáles fueron los principales trabajos de Henry Hazlitt, además de Economía en una lección, y qué impacto tuvieron?",
-    "¿Cómo contribuyó Hazlitt a la popularización de las ideas de Ludwig von Mises?",
-    "¿Qué influencias filosóficas y económicas marcaron el pensamiento de Henry Hazlitt?",
-    "¿Cómo se diferencia Hazlitt de otros economistas liberales de su época, como Friedrich Hayek y Milton Friedman?",
-    "¿Cómo definió Henry Hazlitt la relación entre la economía y la moralidad en su obra Los fundamentos de la moral?",
-    "¿Cómo contribuyó Henry Hazlitt al debate sobre la intervención estatal en la economía?",
-    "¿Cómo fue el enfoque de Hazlitt hacia las consecuencias a largo plazo de las políticas económicas, y por qué es importante su perspectiva?",
-    "¿Qué relación tuvo Hazlitt con otras figuras relevantes del liberalismo económico, como Ayn Rand, y cómo influyeron en su pensamiento?"
-]
-
-
-hazlitt_shuffled_question = hazlitt_questions.copy()
-random.shuffle(hazlitt_shuffled_question )
-
-# Seleccionar 4 aleatorias solo una vez por sesión
-if "hazlitt_suggested_questions" not in st2.session_state:
-    st2.session_state.hazlitt_suggested_questions = random.sample(hazlitt_shuffled_question , 4)
-
-# Mostrar los botones de sugerencias
-st2.markdown("##### 💬 Sugerencias de preguntas")
-cols = st2.columns(4)
-for i, question in enumerate(st2.session_state.hazlitt_suggested_questions):
-    with cols[i]:
-        if st2.button(question, key=f"hazlitt_q_{i}"):
-            st2.session_state["suggested_prompt"] = question
-            st2.rerun()
-
 
 #####################################################################################################################
 
@@ -410,11 +356,11 @@ authenticator = stauth.Authenticate(
     )
 
 
-if st2.session_state["authentication_status"]:
+if st3.session_state["authentication_status"]:
         #authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar')  # Llamada a la función para limpiar sesión)
        #callback=clear_session, esto no funcionamente correctamente ya que no elimina la cookie...
         authenticator.logout(button_name= "Cerrar Sesión" , location='sidebar', callback= callbackclear )  # Llamada a la función para limpiar sesión)
-        with st2.sidebar:
+        with st3.sidebar:
             components.html("""
         <style>
             .btn-print {
@@ -439,26 +385,23 @@ if st2.session_state["authentication_status"]:
 
         <button class="btn-print" onclick="window.top.print()">🖨️ Print</button>
     """, height=50)
-        st2.divider()
+        st3.divider()
         authenticated_menu()
 
    # Mostrar unicamente en la pantalla de autenticacion
-if not st2.session_state["authentication_status"]:
+if not st3.session_state["authentication_status"]:
     #st1.stop()  # Detener ejecución del resto del código
-    st2.query_params.clear()
+    st3.query_params.clear()
     #controller.remove('id_usuario')
-    st2.switch_page("app_autores2.py")
-    st2.session_state.clear()
-    st.session_state.clear()
-    st2.stop()
+    st3.switch_page("app_autores2.py")
+    st3.session_state.clear()
+    st.session_state.clear() 
+    st3.stop()
     #st1.rerun()
     #st1.experimental_rerun()
 ######################################################################################################################
 
 
-
-            
-# Función para formatear el historial
 
 def display_history1(history):
     for message in history:
@@ -466,9 +409,9 @@ def display_history1(history):
         #safe_content = html.escape(message.content)  # Escapar HTML
         #html_content = markdown(message.content)  
         if message.__class__.__name__ == 'HumanMessage':  # Mensajes del usuario
-            st2.markdown(
-                f"""
-                   <div style="padding: 10px; margin-bottom: 10px;
+            st3.markdown(
+                f"""   
+                <div style="padding: 10px; margin-bottom: 10px;
                             background-color: #ffffff;
                             border-radius: 8px;
                             border: 1px solid rgba(49, 51, 63, 0.2);
@@ -479,58 +422,57 @@ def display_history1(history):
                 </div>
                 """, unsafe_allow_html=True)
         elif message.__class__.__name__ == 'AIMessage':  # Respuestas del chatbot
-            st2.markdown(
+            st3.markdown(
                 f"""
-                   <div style="padding: 10px; margin-bottom: 10px;
+                <div style="padding: 10px; margin-bottom: 10px;
                             background-color: #ffffff;
                             border-radius: 8px;
                             border: 1px solid rgba(49, 51, 63, 0.2);
                             color: #262730;
                             font-size: 0.9em;">
-                    <strong>Chatbot (Henry Hazlitt):</strong><br>
+                    <strong>Chatbot (Ludwig von Mises):</strong><br>
                     {content}
                 </div>
                 """, unsafe_allow_html=True)
-            
 
 # Historial del chat
 
 table_name = "CHHSessionTable"
 
-history2 = StreamlitChatMessageHistory(key="chat_messages1")
+history3 = StreamlitChatMessageHistory(key="chat_messages1")
 
 # Chain with History, hay una cadena local, esta sirve para enviar al llm, ya que no guarda referencias
-chain_with_history2 = RunnableWithMessageHistory(
-    chain2,
-    lambda session_id: history2,
+chain_with_history3 = RunnableWithMessageHistory(
+    chain3,
+    lambda session_id: history3,
     input_messages_key="question",
-    history_messages_key="history2",
+    history_messages_key="history3",
     output_messages_key="response",
 )
 
 
 # Crear instancia del historial
-base_session_id_hayek = st.session_state.username # Ejemplo de SessionId único
-extra_identifier_hayek = "hazlitt"
+base_session_id_hayek = st.session_state.username  # Ejemplo de SessionId único
+extra_identifier_hayek = "mises"
 # Concatenar el identificador adicional
 session_id = f"{base_session_id_hayek}-{extra_identifier_hayek}"
-chat_history2 = CustomDynamoDBChatMessageHistory2(table_name=table_name, session_id=session_id)
+chat_history3 = CustomDynamoDBChatMessageHistory3(table_name=table_name, session_id=session_id)
 
 
 
 
-with st2.sidebar:
-    st2.divider()
-    st2.title('Henry Hazlitt 🔗')
+with st3.sidebar:
+    st3.divider()
+    st3.title('Ludwig von Mises 🔗')
     streaming_on = True
-    # st1.button('Limpiar chat', on_click=clear_chat_history)
+
 
     
     #########################################################################################
 
     # Llenando el history local, (esto es lo que se envia al LLM)
-    history2.clear() #para evitar duplicados
-    chat_history_data = chat_history2.get_history()
+    history3.clear() #para evitar duplicados
+    chat_history_data = chat_history3.get_history()
 
     # Copiar mensajes al historial local (sin referencias)
     for message in chat_history_data.get("History", []):
@@ -544,29 +486,27 @@ with st2.sidebar:
         # Agregar al historial local
         #history.add_message(formatted_message["role"], formatted_message["content"])
         # Agregar el mensaje al historial local
-        history2.add_message(msg_obj)
+        history3.add_message(msg_obj)
 
     ########################################################################################
 
 
+    # st1.button('Limpiar chat', on_click=clear_chat_history)
+    with st3.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
+        display_history1(history3.messages) 
 
-    with st2.expander("Ver historial de conversación", expanded=False):  # collapsed por defecto
-        display_history1(history2.messages) 
-
-    st2.divider()
-
+    st3.divider()
 
 #####################################################################################################################
 
-
     # Llenando el session_state local
-    if "messages2" not in st2.session_state:
+    if "messages3" not in st3.session_state:
 
-            st2.session_state.messages2 = []
+            st3.session_state.messages3 = []
         
             # Cargar los mensajes guardados de dynamo DB
             #stored_messages= chat_history.get_history()["History"] ##history.messages
-            stored_messages = chat_history2.get_history().get("History", [])  # Proveer una lista vacía si no hay historial
+            stored_messages = chat_history3.get_history().get("History", [])  # Proveer una lista vacía si no hay historial
 
             if stored_messages:
  
@@ -583,88 +523,88 @@ with st2.sidebar:
                         "citations": msg["data"].get("citations", [])  # Agregar citations si existen, de lo contrario una lista vacía
                     }
                         # Agregar al estado
-                    st2.session_state.messages2.append(message)
+                    st3.session_state.messages3.append(message)
             else :
                 
                 # Si no hay historial, mostrar mensaje inicial del asistente
-                st2.session_state.messages2.append({"role": "assistant", "content": "Pregúntame sobre economía"})
+                st3.session_state.messages3.append({"role": "assistant", "content": "Pregúntame sobre economía"})
 
 ##############################################################################################################################
 
+
+# Display chat messages
+#for message in st3.session_state.messages3:
+#    with st3.chat_message(message["role"]):
+#        st3.write(message["content"])
+
+
 # Mostrar historial de chat con referencias
-for message in st2.session_state.messages2:
-    with st2.chat_message(message["role"]):
-        st2.write(message["content"])
+for message in st3.session_state.messages3:
+    with st3.chat_message(message["role"]):
+        st3.write(message["content"])
         
         # Verificar si hay referencias y agregar un expander si existen
         if message.get("citations"):
-            with st2.expander("Mostrar referencias >"):
+            with st3.expander("Mostrar referencias >"):
                 for citation in message["citations"]:
                     # Mostrar cada referencia con su contenido y fuente, este formato también puede ser utilizado
                    # st.write(f"- {citation['page_content']} (Fuente: {citation['metadata']['source']})")
                       # Mostrar cada referencia con su contenido y fuente
-                    st2.write(f" **Contenido:** {citation['page_content']} ")
-                    st2.write(f" **Fuente:** {citation['metadata']['source']}")
-                    #st2.write(f" **Score**: {citation['metadata']['score']}")
-                    st2.write("--------------")
+                    st3.write(f" **Contenido:** {citation['page_content']} ")
+                    st3.write(f" **Fuente:** {citation['metadata']['source']}")
+                    #st3.write(f" **Score**: {citation['metadata']['score']}")
+                    st3.write("--------------")
                     score = (citation['metadata']['score'])
 
         #            st1.write("**Score**:", citation.metadata['score'])
         #            st1.write("--------------")
 
-
-prompt = st2.chat_input("Escribe tu mensaje aquí...")
-
-# Usar la pregunta sugerida si existe
-if not prompt and "suggested_prompt" in st2.session_state:
-    prompt = st2.session_state.pop("suggested_prompt")  # eliminarla tras usarla
-
-
 # Chat Input - User Prompt 
-if prompt :
-    st2.session_state.messages2.append({"role": "user", "content": prompt})
-    with st2.chat_message("user"):
-        st2.write(prompt)
+if prompt := st3.chat_input("Escribe tu mensaje aquí..."):
+    st3.session_state.messages3.append({"role": "user", "content": prompt})
+    with st3.chat_message("user"):
+        st3.write(prompt)
 
-    config2 = {"configurable": {"session_id": "any"}}
+    config3 = {"configurable": {"session_id": "any"}}
     
     if streaming_on:
         # Chain - Stream
-        with st2.chat_message("assistant"):
-            placeholder2 = st2.empty()
-            full_response2 = ''
-            for chunk in chain_with_history2.stream(
-                {"question" : prompt, "history2" : chat_history2},
-                config2
+        with st3.chat_message("assistant"):
+            placeholder3 = st3.empty()
+            full_response3 = ''
+            for chunk in chain_with_history3.stream(
+                {"question" : prompt, "history3" : chat_history3},
+                config3
             ):
                 if 'response' in chunk:
-                    full_response2 += chunk['response']
-                    placeholder2.markdown(full_response2)
+                    full_response3 += chunk['response']
+                    placeholder3.markdown(full_response3)
                 else:
-                    full_context2 = chunk['context']
-            placeholder2.markdown(full_response2)
+                    full_context3 = chunk['context']
+            placeholder3.markdown(full_response3)
             # Citations with S3 pre-signed URL
-            citations2 = extract_citations(full_context2)
-            formatted_citations2 = []  # Lista para almacenar las citas en el formato deseado
-            with st2.expander("Mostrar referencias >"):
-                for citation in citations2:
-                    st2.write("**Contenido:** ", citation.page_content)
+            citations3 = extract_citations(full_context3)
+            formatted_citations3 = []  # Lista para almacenar las citas en el formato deseado
+
+            with st3.expander("Mostrar referencias >"):
+                for citation in citations3:
+                    st3.write("**Contenido:** ", citation.page_content)
                     source = ""
                     if "location" in citation.metadata and "s3Location" in citation.metadata["location"]:
                         s3_uri = citation.metadata["location"]["s3Location"]["uri"]
                         bucket, key = parse_s3_uri(s3_uri)
-                        st2.write(f"**Fuente**: *{key}* ")
+                        st3.write(f"**Fuente**: *{key}* ")
                         source = key
                         score= citation.metadata['score']
 
                     else:
-                        st2.write("**Fuente:** No disponible")
-                        #st2.write("**Score**:", citation.metadata['score'])
-                    st2.write("--------------")
+                        st3.write("**Fuente:** No disponible")
+                       # st1.write("**Score**:", citation.metadata['score'])
+                    st3.write("--------------")
              
 
                     # Agregar al formato de placeholder_citations
-                    formatted_citations2.append({
+                    formatted_citations3.append({
                             "page_content": citation.page_content,
                             "metadata": {
                                 "source": source,
@@ -672,21 +612,21 @@ if prompt :
                             }
                         })
 
-
             # session_state append
-            #st2.session_state.messages2.append({"role": "assistant", "content": full_response2})
+            #st3.session_state.messages3.append({"role": "assistant", "content": full_response3})
+
             human_message = format_message(prompt, "human")
-            chat_history2.update_history(human_message)
+            chat_history3.update_history(human_message)
 
             # Crear el mensaje del asistente(chatbot) con citas
-            ai_message = format_message(full_response2, "ai", formatted_citations2)
-            chat_history2.update_history(ai_message)
+            ai_message = format_message(full_response3, "ai", formatted_citations3)
+            chat_history3.update_history(ai_message)
 
 
-            #session_state con referencias
-            st2.session_state.messages2.append({
+               #session_state con referencias
+            st3.session_state.messages3.append({
             "role": "assistant",
-            "content": full_response2,
-            "citations": formatted_citations2  # Guardar referencias junto con la respuesta.
+            "content": full_response3,
+            "citations": formatted_citations3  # Guardar referencias junto con la respuesta.
         })
-            
+ 
